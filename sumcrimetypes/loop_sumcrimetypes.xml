@@ -1,0 +1,28 @@
+<workflow-app name="loop_sumcrimetypes" xmlns="uri:oozie:workflow:0.4">
+    <start to="loop"/>
+
+    <action name="loop">
+        <sub-workflow>
+            <app-path>${wfDir}/loop.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>loop_action</name>
+                    <value>${wfDir}/sumcrimetypes.xml</value>
+                </property>
+                <property>
+                    <name>loop_name</name>
+                    <value>sum_crime_types</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="end"/>
+        <error to="error"/>
+    </action>
+
+    <kill name="error">
+        <message>An error occurred whle executing the loop / sum_crime_types sub-workflow! Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+
+    <end name="end"/>
+</workflow-app>

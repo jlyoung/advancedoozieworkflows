@@ -1,0 +1,32 @@
+<workflow-app name="sumcrimetypes_${loop_value}" xmlns="uri:oozie:workflow:0.4">
+  <global>
+    <job-tracker>${jobTracker}</job-tracker>
+    <name-node>${nameNode}</name-node>
+  </global>
+  <credentials>
+    <credential name="hs2-creds" type="hive2">
+      <property>
+        <name>hive2.server.principal</name>
+          <value>${jdbcPrincipal}</value>
+      </property>
+      <property>
+       <name>hive2.jdbc.url</name>
+         <value>${jdbcURL}</value>
+      </property>
+    </credential>
+  </credentials>
+  <start to="sumcrimetypes"/>
+    <action name="sumcrimetypes" cred="hs2-creds">
+      <hive2 xmlns="uri:oozie:hive2-action:0.1">
+        <jdbc-url>${jdbcURL}</jdbc-url>
+        <script>${sumcrimetypesHiveScript}</script>
+        <param>primaryCrimeType=${loop_value}</param>
+      </hive2>
+      <ok to="end"/>
+      <error to="error"/>
+    </action>
+  <kill name="error">
+    <message>Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+  </kill>
+  <end name="end"/>
+</workflow-app>
