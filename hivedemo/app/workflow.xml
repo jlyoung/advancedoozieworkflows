@@ -1,0 +1,32 @@
+<workflow-app name="hivedemo" xmlns="uri:oozie:workflow:0.4">
+  <global>
+    <job-tracker>${jobTracker}</job-tracker>
+    <name-node>${nameNode}</name-node>
+  </global>
+  <credentials>
+    <credential name="hs2-creds" type="hive2">
+      <property>
+        <name>hive2.server.principal</name>
+          <value>${jdbcPrincipal}</value>
+      </property>
+      <property>
+       <name>hive2.jdbc.url</name>
+         <value>${jdbcURL}</value>
+      </property>
+    </credential>
+  </credentials>
+  <start to="hive2"/>
+    <action name="hive2" cred="hs2-creds">
+      <hive2 xmlns="uri:oozie:hive2-action:0.1">
+        <jdbc-url>${jdbcURL}</jdbc-url>
+        <script>${hivescript}</script>
+        <param>queryYear=${queryYear}</param>
+      </hive2>
+      <ok to="End"/>
+      <error to="Kill"/>
+    </action>
+    <kill name="Kill">
+    <message>Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+  </kill>
+  <end name="End"/>
+</workflow-app>
