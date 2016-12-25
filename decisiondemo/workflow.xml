@@ -1,4 +1,4 @@
-<workflow-app name="loop_sumcrimetypes" xmlns="uri:oozie:workflow:0.4">
+<workflow-app name="decisionexample" xmlns="uri:oozie:workflow:0.4">
     <global>
         <job-tracker>${jobTracker}</job-tracker>
         <name-node>${nameNode}</name-node>
