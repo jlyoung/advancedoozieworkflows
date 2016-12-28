@@ -1,4 +1,4 @@
-# Advanced Oozie Workflow
+# Advanced Oozie Workflows
 
 # Summary
 This is a series of demo workflows I've provided that will demonstrate Advanced Oozie techniques.
