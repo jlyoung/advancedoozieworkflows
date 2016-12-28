@@ -1,0 +1,41 @@
+<workflow-app xmlns='uri:oozie:workflow:0.4' name='shell-with-delegation-beeline'>
+  <credentials>
+    <credential name="hs2-creds" type="hive2">
+      <property>
+        <name>hive2.server.principal</name>
+          <value>${jdbcPrincipal}</value>
+      </property>
+      <property>
+       <name>hive2.jdbc.url</name>
+         <value>${jdbcURL}</value>
+      </property>
+    </credential>
+  </credentials>
+    <start to='shell-action-with-delegation' />
+    <action name='shell-action-with-delegation' cred='hs2-creds'>
+        <shell xmlns="uri:oozie:shell-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${tablecountDir}"/>
+                <mkdir path="${tablecountDir}"/>
+            </prepare>
+            <exec>with_delegation_beeline_table_count.sh</exec>
+            <file>${withDelegationBeelineOozieScript}#with_delegation_beeline_table_count.sh</file>
+            <capture-output/>
+        </shell>
+        <ok to="touch-filecount" />
+        <error to="fail" />
+    </action>
+    <action name="touch-filecount">
+         <fs>
+            <touchz path="${tablecountDir}/with_delegation_${wf:actionData('shell-action-with-delegation')['beelinetablecount']}.txt"/>
+         </fs>
+        <ok to="end" />
+        <error to="fail"/>
+    </action>
+    <kill name="fail">
+        <message>Script failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name='end' />
+</workflow-app>
