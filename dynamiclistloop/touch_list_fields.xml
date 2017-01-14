@@ -1,0 +1,37 @@
+<workflow-app name="touch_file_${loop_value}" xmlns="uri:oozie:workflow:0.4">
+<!-- This sub-workflow is the logic called by the loop that does the actual work. -->
+    <global>
+        <job-tracker>${jobTracker}</job-tracker>
+        <name-node>${nameNode}</name-node>
+    </global>
+
+    <start to="prepare_folder"/>
+
+<!-- Ensure the /user/oozie/ooziedemo/dynamiclistloop/output/yyyyMMddHHmm
+     folder exists.
+-->
+    <action name="prepare_folder">
+        <fs>
+            <mkdir path="${wfDir}/output/${folder_timestamp}"/>
+        </fs>
+        <ok to="touch_file_name_from_list" />
+        <error to="fail"/>
+    </action>
+
+<!-- Using the loop_value variable passed in from the parent workflow,
+     create a file in HDFS whose name consists of the loop_value follwed
+     by ".txt"
+-->
+    <action name="touch_file_name_from_list">
+        <fs>
+            <touchz path="${wfDir}/output/${folder_timestamp}/${loop_value}.txt"/>
+        </fs>
+        <ok to="end" />
+        <error to="fail"/>
+    </action>
+
+    <kill name="fail">
+        <message>Script failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name='end' />
+</workflow-app>

@@ -1,0 +1,79 @@
+<workflow-app name="dynamiclistloop" xmlns="uri:oozie:workflow:0.4">
+    <global>
+        <job-tracker>${jobTracker}</job-tracker>
+        <name-node>${nameNode}</name-node>
+    </global>
+
+    <start to="generate_list"/>
+
+<!-- Execute a shell script that will output one randomly selected row from a CSV (data.csv) file as:
+         loop_list=comma,separated,fields,from,csv,row
+     The purpose of this is to generate a dynamically populated loop_list and store it in a variable 
+     as opposed to a hard-coded loop_list configured in the job.properties file.
+     Capture the output for use in the "loop" action.
+-->
+    <action name ="generate_list">
+        <shell xmlns="uri:oozie:shell-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <exec>select_random_row_list.sh</exec>
+            <argument>data.csv</argument>
+            <file>select_random_row_list.sh#select_random_row_list.sh</file>
+            <file>data.csv#data.csv</file>
+            <capture-output/>
+        </shell>
+        <ok to="loop"/>
+        <error to="generate_list_error"/>
+    </action>
+
+<!-- For each element in loop_list, execute the sub-workflow referenced at ${loopWorkflowPath}
+     (in this case, touch_list_fields.xml - which will create a new file in HDFS with the loop
+     element as the filename).
+--> 
+    <action name="loop">
+        <sub-workflow>
+            <app-path>${wfDir}/loop.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+<!-- In Jeremy Beard's original oozieloop project, the value of loop_list is hard-coded in
+     the jobs.properties file. In this demo, loop_list is a dynamically populated variable.
+     The values for loop_list are randomly chosen from a CSV file in the "generate_list"
+     action above and stored as a "property" with the following block.
+-->
+                <property>
+                    <name>loop_list</name>
+                    <value>${wf:actionData('generate_list')['loop_list']}</value>
+                </property>
+<!-- The following block defines the path to the sub-workflow -->
+                <property>
+                    <name>loop_action</name>
+                    <value>${loopWorkflowPath}</value>
+                </property>
+                <property>
+                    <name>loop_name</name>
+                    <value>dynamic_list_loop</value>
+                </property>
+<!-- The following block creates a timestamp variable used to generate a uniqe folder
+     name to store the output files each time this Oozie workflow is run.
+     It converts ISO 8601 timestamp format to yyyyMMddHHmm.
+-->
+                <property>
+                    <name>folder_timestamp</name>
+                    <value>${replaceAll(timestamp(),"^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2})\\:(\\d{2}).*$","$1$2$3$4$5")}</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="end"/>
+        <error to="loop_error"/>
+    </action>
+
+    <kill name="generate_list_error">
+        <message>An error occurred whle executing the generate_list shell action! Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+
+    <kill name="loop_error">
+        <message>An error occurred whle executing the loop / dynamic_list_loop sub-workflow! Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+
+    <end name="end"/>
+</workflow-app>
