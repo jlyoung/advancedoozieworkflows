@@ -1,0 +1,19 @@
+<workflow-app name="configdefaulttest" xmlns="uri:oozie:workflow:0.4">
+  <global>
+    <job-tracker>${jobTracker}</job-tracker>
+    <name-node>${nameNode}</name-node>
+  </global>
+  <start to="touch_file"/>
+    <action name="touch_file">
+        <fs>
+            <touchz path="${wfDir}/output/${sub_folder_name}/${folder_name}/${file_name}"/>
+        </fs>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+    <kill name="fail">
+        <message>Script failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>
+

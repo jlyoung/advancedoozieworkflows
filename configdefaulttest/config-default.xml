@@ -1,0 +1,6 @@
+<configuration>
+    <property>
+        <name>file_name</name>
+        <value>file_name.${file_extension}</value>
+    </property>
+</configuration>

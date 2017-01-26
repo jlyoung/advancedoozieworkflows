@@ -1,0 +1,42 @@
+<workflow-app name="configdefaulttest" xmlns="uri:oozie:workflow:0.4">
+  <global>
+    <job-tracker>${jobTracker}</job-tracker>
+    <name-node>${nameNode}</name-node>
+  </global>
+  <start to="parent_of_delete_sub_folder"/>
+    <action name="parent_of_delete_sub_folder">
+        <sub-workflow>
+          <app-path>${wfDir}/delete_sub_folder.xml</app-path>
+          <propagate-configuration/>
+        </sub-workflow>
+        <ok to="parent_of_prepare_folder"/>
+        <error to="fail"/>
+    </action>
+    <action name="parent_of_prepare_folder">
+        <sub-workflow>
+          <app-path>${wfDir}/prepare_folder.xml</app-path>
+          <propagate-configuration/>
+        </sub-workflow>
+        <ok to="parent_of_touch_file"/>
+        <error to="fail"/>
+    </action>
+    <action name="parent_of_touch_file">
+        <sub-workflow>
+          <app-path>${wfDir}/touch_file.xml</app-path>
+          <propagate-configuration/>
+          <configuration>
+            <property>
+              <name>file_extension</name>
+              <value>txt</value>
+            </property>
+          </configuration>
+        </sub-workflow>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+    <kill name="fail">
+        <message>Script failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>
+
